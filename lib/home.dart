@@ -1,5 +1,4 @@
 import 'dart:async';
-// import 'dart:html';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:flutter/material.dart';
@@ -8,24 +7,16 @@ import 'postContent.dart';
 import 'addPost.dart';
 import 'login.dart';
 import 'data.dart';
-import 'main.dart';
 
-Future<List<Post>> getData1(String url) async {
+Future<List<Post>> getData(String url) async {
   var response = await http.get(Uri.parse(url));
   if (response.statusCode == 200) {
     List<dynamic> jsonObjectList = jsonDecode(utf8.decode(response.bodyBytes));
     List<Post> items = jsonObjectList.map((i) => Post.fromJson(i)).toList();
     return items;
-  } else
+  } else {
     throw Exception('Failed to load data!');
-}
-
-bool CaseInsensitiveContains(String source, String pattern) {
-  final patternLC = pattern.toLowerCase();
-  final patternUC = pattern.toUpperCase();
-  final sourceLC = source.toLowerCase();
-  final sourceUC = source.toUpperCase();
-  return sourceLC.contains(patternLC) || sourceUC.contains(patternUC);
+  }
 }
 
 class Home extends StatefulWidget {
@@ -35,11 +26,13 @@ class Home extends StatefulWidget {
 }
 
 class _HomeState extends State<Home> {
+
   String searchText = "";
   List<Post> searchResults = [];
-  List<Post> postList1 = [];
+  List<Post> postList = [];
   TextEditingController _textController = TextEditingController();
-  Future<List<Post>> response = getData1(post_url);
+  Future<List<Post>> response = getData(post_url);
+
 
   @override
   void initState() {
@@ -47,11 +40,27 @@ class _HomeState extends State<Home> {
     _textController.text = tagText;
   }
 
+  bool CaseInsensitiveContains(String source, String pattern) {
+    final patternLC = pattern.toLowerCase();
+    final patternUC = pattern.toUpperCase();
+    final sourceLC = source.toLowerCase();
+    final sourceUC = source.toUpperCase();
+    return sourceLC.contains(patternLC) || sourceUC.contains(patternUC);
+  }
+
+  String buildTags(List<Tag> tags) {
+    String tagcontent = '';
+    for (int i = 0; i < tags.length; i++) {
+      tagcontent += '#${tags[i].name}';
+    }
+    return tagcontent;
+  }
+
   void onSubmitted(String value) {
     setState(() {
       searchText = value.toLowerCase();
       searchResults = [];
-      searchResults = postList1
+      searchResults = postList
           .where((post) =>
               CaseInsensitiveContains(post.title, searchText) ||
               CaseInsensitiveContains(post.content, searchText) ||
@@ -63,12 +72,13 @@ class _HomeState extends State<Home> {
 
   Future<void> refreshData() async {
     setState(() {
-      response = getData1(post_url);
+      response = getData(post_url);
     });
   }
 
   @override
   Widget build(BuildContext context) {
+
     return Stack(children: [
       Scaffold(
           backgroundColor: backgroundColor1,
@@ -84,8 +94,9 @@ class _HomeState extends State<Home> {
                         child: TextField(
                           //收尋欄
                           controller: _textController,
-                          onChanged: (value) {
+                          onChanged: (value) async {
                             onSubmitted(value);
+                            print(await getToken()); ///////////////////////
                           },
                           onSubmitted: (value) {
                             onSubmitted(value);
@@ -120,7 +131,7 @@ class _HomeState extends State<Home> {
                   ),
                   Column(
                     children: [
-                      if (token == '') ...[
+                      if (token=='2222') ...[
                         ///////////////////////如果沒有登入////////////////////////////////
                         SizedBox(
                           width: 80,
@@ -139,7 +150,7 @@ class _HomeState extends State<Home> {
                               );
                             }),
                         Text(
-                          '未登入', /////////////////////////////////////////////////////////////////////////////////////////
+                          '未登入',
                           style: const TextStyle(
                             fontSize: 15.0,
                             color: Colors.white,
@@ -172,7 +183,9 @@ class _HomeState extends State<Home> {
                                       TextButton(
                                         child: Text('確定'),
                                         onPressed: () {
-                                          // /////////////////////////登出後要清掉token//////////////////////////////////////////////////////////////
+                                          saveToken("");
+                                          ///////////////////////////登出後要清掉token///////////////////
+                                          //
                                           Navigator.of(context).pop();
                                         },
                                       ),
@@ -182,7 +195,7 @@ class _HomeState extends State<Home> {
                               );
                             }),
                         Text(
-                          '資訊工程系', //////////////改成apartmemt///////////////////////////////////////////////////////////////////////////
+                         userdata.department, //////////////改成apartmemt/////////////////////
                           style: const TextStyle(
                             fontSize: 15.0,
                             color: Colors.white,
@@ -201,101 +214,107 @@ class _HomeState extends State<Home> {
                         future: response,
                         builder: (context, abc) {
                           if (abc.hasData) {
-                            postList1 = abc.data!;
+                            postList = abc.data!;
                             return ListView.builder(
                               shrinkWrap: true,
-                              itemCount: postList1.length,
+                              itemCount: postList.length,
                               itemBuilder: (BuildContext context, int index) {
-                                return SizedBox(
-                                  height: 140.0,
-                                  child: Card(
-                                      child: InkWell(
-                                          onTap: () async {
-                                            var result = await Navigator.push(
-                                              context,
-                                              MaterialPageRoute(
-                                                  builder: (context) =>
-                                                      postConent(
-                                                          postList1: postList1,
-                                                          index: index)),
-                                            );
-                                            if (result == true) {
-                                              setState(() {
-                                                refreshData();
-                                              });
-                                            }
-                                          },
-                                          child: SingleChildScrollView(
-                                            padding: const EdgeInsets.only(
-                                                left: 6.0),
-                                            child: Column(
-                                                crossAxisAlignment:
-                                                    CrossAxisAlignment.start,
-                                                children: [
-                                                  Text(
-                                                    '${postList1[index].create_by}  ${postList1[index].created_at.substring(0, 10)}     瀏覽人數:${postList1[index].views}',
-                                                    style: TextStyle(
-                                                      fontSize: 16.0,
-                                                      color: backgroundColor1,
+                                if (postList[index].state == true ||
+                                    token == '') {
+                                  //////////////////////////////////管理員可以看到全部
+                                  return SizedBox(
+                                    height: 140.0,
+                                    child: Card(
+                                        child: InkWell(
+                                            onTap: () async {
+                                              var result = await Navigator.push(
+                                                context,
+                                                MaterialPageRoute(
+                                                    builder: (context) =>
+                                                        postConent(
+                                                            postList: postList,
+                                                            index: index)),
+                                              );
+                                              if (result == true) {
+                                                setState(() {
+                                                  refreshData();
+                                                });
+                                              }
+                                            },
+                                            child: SingleChildScrollView(
+                                              padding: const EdgeInsets.only(
+                                                  left: 6.0),
+                                              child: Column(
+                                                  crossAxisAlignment:
+                                                      CrossAxisAlignment.start,
+                                                  children: [
+                                                    Text(
+                                                      '${postList[index].create_by}  ${postList[index].created_at.substring(0, 10)}     瀏覽人數:${postList[index].views}',
+                                                      style: TextStyle(
+                                                        fontSize: 16.0,
+                                                        color: backgroundColor1,
+                                                      ),
                                                     ),
-                                                  ),
-                                                  const SizedBox(
-                                                    height: 3,
-                                                  ),
-                                                  Text(
-                                                    '${postList1[index].title}',
-                                                    style: const TextStyle(
-                                                      fontSize: 23.0,
-                                                      color: Colors.black,
+                                                    const SizedBox(
+                                                      height: 3,
                                                     ),
-                                                  ),
-                                                  const SizedBox(
-                                                    height: 5,
-                                                  ),
-                                                  Text(
-                                                    ' ' +
-                                                        '${postList1[index].content}' +
-                                                        '.....',
-                                                    style: TextStyle(
-                                                      fontSize: 15.0,
-                                                      color: backgroundColor1,
+                                                    Text(
+                                                      '${postList[index].title}',
+                                                      style: const TextStyle(
+                                                        fontSize: 23.0,
+                                                        color: Colors.black,
+                                                      ),
                                                     ),
-                                                    maxLines: 1,
-                                                    overflow:
-                                                        TextOverflow.ellipsis,
-                                                    softWrap: false,
-                                                  ),
-                                                  SizedBox(
-                                                    height: 15,
-                                                  ),
-                                                  Row(
-                                                    children: [
-                                                      if (postList1[index]
-                                                          .tags
-                                                          .isNotEmpty)
-                                                        for (int i = 0;
-                                                            i <
-                                                                postList1[index]
-                                                                    .tags
-                                                                    .length;
-                                                            i++)
-                                                          Text(
-                                                            '#${postList1[index].tags[i].name}',
-                                                            style: TextStyle(
-                                                              fontSize: 15.0,
-                                                              color:
-                                                                  backgroundColor1,
+                                                    const SizedBox(
+                                                      height: 5,
+                                                    ),
+                                                    Text(
+                                                      ' ' +
+                                                          '${postList[index].content}' +
+                                                          '.....',
+                                                      style: TextStyle(
+                                                        fontSize: 15.0,
+                                                        color: backgroundColor1,
+                                                      ),
+                                                      maxLines: 1,
+                                                      overflow:
+                                                          TextOverflow.ellipsis,
+                                                      softWrap: false,
+                                                    ),
+                                                    SizedBox(
+                                                      height: 15,
+                                                    ),
+                                                    Row(
+                                                      children: [
+                                                        if (postList[index]
+                                                            .tags
+                                                            .isNotEmpty)
+                                                          Expanded(
+                                                            child: Text(
+                                                              buildTags(
+                                                                  postList[
+                                                                          index]
+                                                                      .tags),
+                                                              style: TextStyle(
+                                                                fontSize: 15.0,
+                                                                color:
+                                                                    backgroundColor1,
+                                                              ),
+                                                              overflow:
+                                                                  TextOverflow
+                                                                      .ellipsis,
                                                             ),
-                                                            overflow:
-                                                                TextOverflow
-                                                                    .ellipsis,
-                                                            softWrap: false,
                                                           ),
-                                                    ],
-                                                  ),
-                                                ]),
-                                          ))),
-                                );
+                                                      ],
+                                                    ),
+                                                  ]),
+                                            ))),
+                                  );
+                                } else {
+                                  return SizedBox(
+                                    height: 0,
+                                  );
+                                }
                               },
                             );
                           } else if (abc.hasError) {
@@ -313,16 +332,15 @@ class _HomeState extends State<Home> {
                         future: response,
                         builder: (context, abc) {
                           if (abc.hasData) {
-                            postList1 = abc.data!;
+                            postList = abc.data!;
                             if (tagText.isEmpty) {
                               searchText = searchText.toLowerCase();
                               tagText = '';
                             } else {
                               searchText = tagText.toLowerCase();
                             }
-                            // searchText = tagText.toLowerCase();
                             searchResults = [];
-                            searchResults = postList1
+                            searchResults = postList
                                 .where((post) =>
                                     CaseInsensitiveContains(
                                         post.title, searchText) ||
@@ -338,92 +356,95 @@ class _HomeState extends State<Home> {
                               shrinkWrap: true,
                               itemCount: searchResults.length,
                               itemBuilder: (BuildContext context, int index) {
-                                return SizedBox(
-                                  height: 140.0,
-                                  child: Card(
-                                      child: InkWell(
-                                          onTap: () {
-                                            Navigator.push(
-                                              context,
-                                              MaterialPageRoute(
-                                                  builder: (context) =>
-                                                      postConent(
-                                                          postList1: postList1,
-                                                          index: index)),
-                                            );
-                                          },
-                                          child: SingleChildScrollView(
-                                            padding: const EdgeInsets.only(
-                                                left: 6.0),
-                                            child: Column(
-                                                crossAxisAlignment:
-                                                    CrossAxisAlignment.start,
-                                                children: [
-                                                  Text(
-                                                    '${searchResults[index].create_by}  ${searchResults[index].created_at.substring(0, 10)}     瀏覽人數:${searchResults[index].views}',
-                                                    style: TextStyle(
-                                                      fontSize: 16.0,
-                                                      color: backgroundColor1,
+                                if (searchResults[index].state == true ||token == '2') {///////////管理員可以看到全部
+                                  return SizedBox(
+                                    height: 140.0,
+                                    child: Card(
+                                        child: InkWell(
+                                            onTap: () {
+                                              Navigator.push(
+                                                context,
+                                                MaterialPageRoute(
+                                                    builder: (context) =>
+                                                        postConent(
+                                                            postList: postList,
+                                                            index: index)),
+                                              );
+                                            },
+                                            child: SingleChildScrollView(
+                                              padding: const EdgeInsets.only(
+                                                  left: 6.0),
+                                              child: Column(
+                                                  crossAxisAlignment:
+                                                      CrossAxisAlignment.start,
+                                                  children: [
+                                                    Text(
+                                                      '${searchResults[index].create_by}  ${searchResults[index].created_at.substring(0, 10)}     瀏覽人數:${searchResults[index].views}',
+                                                      style: TextStyle(
+                                                        fontSize: 16.0,
+                                                        color: backgroundColor1,
+                                                      ),
                                                     ),
-                                                  ),
-                                                  const SizedBox(
-                                                    height: 3,
-                                                  ),
-                                                  Text(
-                                                    '${searchResults[index].title}',
-                                                    style: const TextStyle(
-                                                      fontSize: 23.0,
-                                                      color: Colors.black,
+                                                    const SizedBox(
+                                                      height: 3,
                                                     ),
-                                                  ),
-                                                  const SizedBox(
-                                                    height: 5,
-                                                  ),
-                                                  Text(
-                                                    ' ' +
-                                                        '${searchResults[index].content}' +
-                                                        '.....',
-                                                    style: TextStyle(
-                                                      fontSize: 15.0,
-                                                      color: backgroundColor1,
+                                                    Text(
+                                                      '${searchResults[index].title}',
+                                                      style: const TextStyle(
+                                                        fontSize: 23.0,
+                                                        color: Colors.black,
+                                                      ),
                                                     ),
-                                                    maxLines: 1,
-                                                    overflow:
-                                                        TextOverflow.ellipsis,
-                                                    softWrap: false,
-                                                  ),
-                                                  SizedBox(
-                                                    height: 15,
-                                                  ),
-                                                  Row(
-                                                    children: [
-                                                      if (searchResults[index]
-                                                          .tags
-                                                          .isNotEmpty)
-                                                        for (int i = 0;
-                                                            i <
-                                                                searchResults[
-                                                                        index]
-                                                                    .tags
-                                                                    .length;
-                                                            i++)
-                                                          Text(
-                                                            '#${searchResults[index].tags[i].name}',
-                                                            style: TextStyle(
-                                                              fontSize: 15.0,
-                                                              color:
-                                                                  backgroundColor1,
+                                                    const SizedBox(
+                                                      height: 5,
+                                                    ),
+                                                    Text(
+                                                      ' ' +
+                                                          '${searchResults[index].content}' +
+                                                          '.....',
+                                                      style: TextStyle(
+                                                        fontSize: 15.0,
+                                                        color: backgroundColor1,
+                                                      ),
+                                                      maxLines: 1,
+                                                      overflow:
+                                                          TextOverflow.ellipsis,
+                                                      softWrap: false,
+                                                    ),
+                                                    SizedBox(
+                                                      height: 15,
+                                                    ),
+                                                    Row(
+                                                      children: [
+                                                        if (searchResults[index]
+                                                            .tags
+                                                            .isNotEmpty)
+                                                          Expanded(
+                                                            child: Text(
+                                                              buildTags(
+                                                                  searchResults[
+                                                                          index]
+                                                                      .tags),
+                                                              style: TextStyle(
+                                                                fontSize: 15.0,
+                                                                color:
+                                                                    backgroundColor1,
+                                                              ),
+                                                              overflow:
+                                                                  TextOverflow
+                                                                      .ellipsis,
                                                             ),
-                                                            overflow:
-                                                                TextOverflow
-                                                                    .ellipsis,
-                                                            softWrap: false,
                                                           ),
-                                                    ],
-                                                  ),
-                                                ]),
-                                          ))),
-                                );
+                                                      ],
+                                                    ),
+                                                  ]),
+                                            ))),
+                                  );
+                                } else {
+                                  return SizedBox(
+                                    height: 0,
+                                  );
+                                }
                               },
                             );
                           } else if (abc.hasError) {
@@ -437,8 +458,8 @@ class _HomeState extends State<Home> {
           )),
       AnimatedPositioned(
         duration: Duration(milliseconds: 300),
-        right:16,
-        bottom: 16 ,
+        right: 16,
+        bottom: 16,
         child: Container(
           decoration: BoxDecoration(
             shape: BoxShape.circle,
@@ -453,13 +474,14 @@ class _HomeState extends State<Home> {
           ),
           child: GestureDetector(
             onTap: () {
-              if (token=='2') {////////////如果有登入/////////////////////////////////////////////////////////////
+              if (token == '') {
+                ////////////如果有登入////////////////////////////////////////
                 Navigator.push(
                   context,
                   MaterialPageRoute(builder: (context) => addPost()),
                 );
               } else {
-                 showDialog(
+                showDialog(
                   context: context,
                   builder: (BuildContext context) {
                     return AlertDialog(
@@ -476,7 +498,6 @@ class _HomeState extends State<Home> {
                     );
                   },
                 );
-               
               }
             },
             child: Container(

@@ -27,6 +27,7 @@ class _addPostState extends State<addPost> {
   String title = '';
   String article = '';
   String tag = '';
+  int rating = 4;
   List<int> selectedtagsOptions = [0];
   List<Tag> tags = [];
   final TextEditingController _tagcontroller = TextEditingController();
@@ -81,6 +82,66 @@ class _addPostState extends State<addPost> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
+                       Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [Text(
+                          '課程推薦評分',
+                          style: TextStyle(
+                            fontSize: 20.0,
+                            color: Colors.black,
+                          ),
+                        ),
+                Row(
+                  children: [
+                    IconButton(
+                      icon: Icon(Icons.star ,size: 35),
+                      color: rating >= 1 ? Colors.amber : Colors.grey,
+                      onPressed: () {
+                        setState(() {
+                          rating = 1;
+                        });
+                      },
+                    ),IconButton(
+                  icon: Icon(Icons.star,size: 35),
+                  color: rating >= 2 ? Colors.amber : Colors.grey,
+                  onPressed: () {
+                    setState(() {
+                      rating = 2;
+                    });
+                  },
+                ),
+                IconButton(
+                  icon: Icon(Icons.star,size: 35),
+                  color: rating >= 3 ? Colors.amber : Colors.grey,
+                  onPressed: () {
+                    setState(() {
+                      rating = 3;
+                    });
+                  },
+                ),
+                IconButton(
+                  icon: Icon(Icons.star,size: 35),
+                  color: rating >= 4 ? Colors.amber : Colors.grey,
+                  onPressed: () {
+                    setState(() {
+                      rating = 4;
+                    });
+                  },
+                ),
+                IconButton(
+                  icon: Icon(Icons.star,size: 35),
+                  color: rating >= 5 ? Colors.amber : Colors.grey,
+                  onPressed: () {
+                    setState(() {
+                      rating = 5;
+                    });
+                  },
+                ),
+                  ],
+                ),
+                
+              ],
+            ),
                         TextField(
                           maxLines: null, // 可以输入任意多行文本
                           keyboardType: TextInputType.multiline, // 显示多行输入键盘
@@ -312,7 +373,7 @@ class _addPostState extends State<addPost> {
                                               child: SizedBox(
                                                 child: CheckboxListTile(
                                                   title: Text(
-                                                    '(${index + 1})   ${tags[index].name}',
+                                                    '# ${tags[index].name}',
                                                     style: const TextStyle(
                                                       fontSize: 18.0,
                                                       color: Colors.black,
@@ -554,7 +615,7 @@ class _addPostState extends State<addPost> {
                               create_by:
                                   department,
                               created_at: "0",
-                              score: 3,
+                              score: rating,
                               tags: selectedtagsOptions,
                               title: title,
                             );

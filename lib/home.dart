@@ -2,6 +2,8 @@ import 'dart:async';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 import 'postContent.dart';
 import 'addPost.dart';
@@ -18,6 +20,9 @@ Future<List<Post>> getData(String url) async {
     throw Exception('Failed to load data!');
   }
 }
+  String identity = '';
+  String token = '';
+  String department = '';
 
 class Home extends StatefulWidget {
   const Home({super.key});
@@ -26,18 +31,26 @@ class Home extends StatefulWidget {
 }
 
 class _HomeState extends State<Home> {
-
   String searchText = "";
   List<Post> searchResults = [];
   List<Post> postList = [];
   TextEditingController _textController = TextEditingController();
-  Future<List<Post>> response = getData(post_url);
-
+  Future<List<Post>> response = getData(dotenv.env['POST_API']as String);
 
   @override
   void initState() {
     super.initState();
     _textController.text = tagText;
+    loadUserData();
+  }
+
+  Future<void> loadUserData() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    setState(() {
+      identity = (prefs.getString("identity") ?? "non-login");
+      token = (prefs.getString("token") ?? "");
+      department = (prefs.getString("department") ?? "non-department");
+    });
   }
 
   bool CaseInsensitiveContains(String source, String pattern) {
@@ -72,13 +85,12 @@ class _HomeState extends State<Home> {
 
   Future<void> refreshData() async {
     setState(() {
-      response = getData(post_url);
+      response = getData(dotenv.env['POST_API']as String);
     });
   }
 
   @override
   Widget build(BuildContext context) {
-
     return Stack(children: [
       Scaffold(
           backgroundColor: backgroundColor1,
@@ -96,7 +108,6 @@ class _HomeState extends State<Home> {
                           controller: _textController,
                           onChanged: (value) async {
                             onSubmitted(value);
-                            print(await getToken()); ///////////////////////
                           },
                           onSubmitted: (value) {
                             onSubmitted(value);
@@ -131,8 +142,8 @@ class _HomeState extends State<Home> {
                   ),
                   Column(
                     children: [
-                      if (token=='2222') ...[
-                        ///////////////////////如果沒有登入////////////////////////////////
+                      if (identity=="non-login") ...[
+                        ///////////////////////如果沒有登入///////////////////////////////
                         SizedBox(
                           width: 80,
                         ),
@@ -142,12 +153,15 @@ class _HomeState extends State<Home> {
                             icon: Icon(Icons.person),
                             iconSize: 35,
                             color: Colors.white,
-                            onPressed: () {
-                              Navigator.push(
+                            onPressed: ()  async{
+                              await Navigator.push(
                                 context,
                                 MaterialPageRoute(
                                     builder: (context) => login()),
                               );
+                              setState(() {
+                                loadUserData();
+                              });                      
                             }),
                         Text(
                           '未登入',
@@ -161,7 +175,6 @@ class _HomeState extends State<Home> {
                           width: 80,
                         ),
                         IconButton(
-                            //登入帳號
                             tooltip: '登出帳號',
                             icon: Icon(Icons.person),
                             iconSize: 35,
@@ -182,10 +195,12 @@ class _HomeState extends State<Home> {
                                       ),
                                       TextButton(
                                         child: Text('確定'),
-                                        onPressed: () {
-                                          saveToken("");
-                                          ///////////////////////////登出後要清掉token///////////////////
-                                          //
+                                        onPressed: () async {
+                                          SharedPreferences prefs =
+                                              await SharedPreferences
+                                                  .getInstance();
+                                          await prefs.clear();///登出後要清掉token
+                                          loadUserData();                                         
                                           Navigator.of(context).pop();
                                         },
                                       ),
@@ -195,7 +210,7 @@ class _HomeState extends State<Home> {
                               );
                             }),
                         Text(
-                         userdata.department, //////////////改成apartmemt/////////////////////
+                          department, 
                           style: const TextStyle(
                             fontSize: 15.0,
                             color: Colors.white,
@@ -220,8 +235,8 @@ class _HomeState extends State<Home> {
                               itemCount: postList.length,
                               itemBuilder: (BuildContext context, int index) {
                                 if (postList[index].state == true ||
-                                    token == '') {
-                                  //////////////////////////////////管理員可以看到全部
+                                    identity == 'admin') {
+                                  //////////////////管理員可以看到全部
                                   return SizedBox(
                                     height: 140.0,
                                     child: Card(
@@ -356,7 +371,9 @@ class _HomeState extends State<Home> {
                               shrinkWrap: true,
                               itemCount: searchResults.length,
                               itemBuilder: (BuildContext context, int index) {
-                                if (searchResults[index].state == true ||token == '2') {///////////管理員可以看到全部
+                                if (searchResults[index].state == true ||
+                                    identity == 'admin') {
+                                  /////管理員可以看到全部
                                   return SizedBox(
                                     height: 140.0,
                                     child: Card(
@@ -474,8 +491,8 @@ class _HomeState extends State<Home> {
           ),
           child: GestureDetector(
             onTap: () {
-              if (token == '') {
-                ////////////如果有登入////////////////////////////////////////
+              if (identity!="non-login") {
+                ////////////如果有登入/////////
                 Navigator.push(
                   context,
                   MaterialPageRoute(builder: (context) => addPost()),

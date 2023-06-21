@@ -20,7 +20,7 @@ Future<List<Post>> getData(String url) async {
     throw Exception('Failed to load data!');
   }
 }
-  String identity = '';
+  String identify = '';
   String token = '';
   String department = '';
 
@@ -47,7 +47,7 @@ class _HomeState extends State<Home> {
   Future<void> loadUserData() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     setState(() {
-      identity = (prefs.getString("identity") ?? "non-login");
+      identify = (prefs.getString("identify") ?? "non-login");
       token = (prefs.getString("token") ?? "");
       department = (prefs.getString("department") ?? "non-department");
     });
@@ -142,7 +142,7 @@ class _HomeState extends State<Home> {
                   ),
                   Column(
                     children: [
-                      if (identity=="non-login") ...[
+                      if (identify=="non-login") ...[
                         ///////////////////////如果沒有登入///////////////////////////////
                         SizedBox(
                           width: 80,
@@ -235,7 +235,7 @@ class _HomeState extends State<Home> {
                               itemCount: postList.length,
                               itemBuilder: (BuildContext context, int index) {
                                 if (postList[index].state == true ||
-                                    identity == 'admin') {
+                                    identify == 'admin') {
                                   //////////////////管理員可以看到全部
                                   return SizedBox(
                                     height: 140.0,
@@ -372,7 +372,7 @@ class _HomeState extends State<Home> {
                               itemCount: searchResults.length,
                               itemBuilder: (BuildContext context, int index) {
                                 if (searchResults[index].state == true ||
-                                    identity == 'admin') {
+                                    identify == 'admin') {
                                   /////管理員可以看到全部
                                   return SizedBox(
                                     height: 140.0,
@@ -491,7 +491,7 @@ class _HomeState extends State<Home> {
           ),
           child: GestureDetector(
             onTap: () {
-              if (identity!="non-login") {
+              if (identify!="non-login") {
                 ////////////如果有登入/////////
                 Navigator.push(
                   context,

@@ -3,9 +3,8 @@ import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
-
 import 'data.dart';
-import 'login.dart';
+
 
 Future<List<Tag>> getData(String url) async {
   var response = await http.get(Uri.parse(url));
@@ -28,7 +27,7 @@ class _addPostState extends State<addPost> {
   String article = '';
   String tag = '';
   int rating = 4;
-  List<int> selectedtagsOptions = [0];
+  List<int> selectedtagsOptions = [];
   List<Tag> tags = [];
   final TextEditingController _tagcontroller = TextEditingController();
 
@@ -206,7 +205,7 @@ class _addPostState extends State<addPost> {
                         SizedBox(
                           height: 5,
                         ),
-                        if (identity == 'admin') ...[
+                        if (identify == 'admin') ...[
                           Container(
                             decoration: BoxDecoration(
                               border: Border.all(
@@ -296,6 +295,7 @@ class _addPostState extends State<addPost> {
                                                 'accept': 'application/json',
                                                 'Content-Type':
                                                     'application/json',
+                                                     'Authorization': 'Bearer $token'
                                               });
                                           if (new_tag_response.statusCode ==
                                               201) {
@@ -397,7 +397,7 @@ class _addPostState extends State<addPost> {
                                                     mainAxisSize:
                                                         MainAxisSize.min,
                                                     children: [
-                                                      if (identity ==
+                                                      if (identify ==
                                                           'admin') ...[
                                                         ///////////////如果是管理員//////ok
                                                         ElevatedButton(
@@ -410,7 +410,7 @@ class _addPostState extends State<addPost> {
                                                               headers: {
                                                                 'accept':
                                                                     'application/json',
-                                                                'Authorization': 'Bearer $token'//////////////////////////////////////////////
+                                                                'Authorization': 'Bearer $token'
                                                               },
                                                             );
                                                             if (response
@@ -527,7 +527,7 @@ class _addPostState extends State<addPost> {
                                                                     'application/json',
                                                                 'accept':
                                                                     'application/json',
-                                                                'Authorization': 'Bearer $token'//////////////////////////////////////////////
+                                                                'Authorization': 'Bearer $token'
                                                               },
                                                             );
                                                             if (response
@@ -607,9 +607,7 @@ class _addPostState extends State<addPost> {
                           ),
                           style: ElevatedButton.styleFrom(
                               primary: backgroundColor1),
-                          onPressed: () async {
-                            print(
-                                'selectedtagsOptions.length=${selectedtagsOptions.length}');
+                          onPressed: () async {                          
                             CreatPost newpost = new CreatPost(
                               content: article,
                               create_by:
@@ -626,7 +624,7 @@ class _addPostState extends State<addPost> {
                               body: json.encode(newpost.toJson()),
                               headers: {
                                 'accept': 'application/json',
-                                'authorization':'Bearer $token', ////////////////////////////////////ok
+                                'Authorization':'Bearer $token', 
                                 'Content-Type': 'application/json'
                               },
                             );
@@ -666,7 +664,6 @@ class _addPostState extends State<addPost> {
                               );
                             }
                             print(response.body);
-                            print(response.headers['authorization']); /////////////////////
                           },
                         ),
                       ],

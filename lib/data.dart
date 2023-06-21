@@ -2,20 +2,18 @@ import 'package:flutter/material.dart';
 
 Color backgroundColor1 = Color.fromARGB(255, 52, 51, 51);
 Color backgroundColor2 = Color.fromRGBO(96, 165, 244, 0.89);
-final String post_url = 'http://course-fourm.ian-shen.live/api/v1/posts';
-final String tag_url = 'http://course-fourm.ian-shen.live/api/v1/tags';
 
 
 class Userdata{
-  String identity;
+  String identify;
   String token;
   String department;
 
-  Userdata({ required this.identity,required this.token, required this.department});
+  Userdata({ required this.identify,required this.token, required this.department});
 
   factory Userdata.fromJson(Map<String, dynamic> json) {
     return Userdata(
-      identity: json['identity'] as String,
+      identify: json['identify'] as String,
       token: json['token'] as String,
       department: json['department'] as String,
     );
@@ -23,7 +21,7 @@ class Userdata{
 
   Map<String, dynamic> toJson() {
     final Map<String, dynamic> data = new Map<String, dynamic>();
-    data['identity'] = this.identity;
+    data['identify'] = this.identify;
     data['token'] = this.token;
     data['department'] = this.department;
     return data;
@@ -41,8 +39,10 @@ class Post{
   String title;
   String? updated_at;
   int? views;
+  double? sentiment_score;
 
  Post({
+    this.sentiment_score,
     required this.content,
     required this.create_by,
     required this.created_at,
@@ -57,6 +57,7 @@ class Post{
 
   factory Post.fromJson(Map<String, dynamic> json) {
     return Post(
+      sentiment_score:json['sentiment_score'],
       content: json['content'],
       create_by: json['create_by'],
       created_at: json['created_at'],
@@ -80,6 +81,7 @@ class Post{
         'title': title,
         'updated_at': updated_at,
         'views': views,
+        'sentiment_score':sentiment_score
       }; 
 }
 class Tag {
@@ -168,21 +170,21 @@ class CreatPost{
       }; 
 }
 class User {
-  String email;
+  String username;
   String password;
 
-  User({required this.email, required this.password});
+  User({required this.username, required this.password});
 
   factory User.fromJson(Map<String, dynamic> json) {
     return User(
-      email: json['email'],
+      username: json['username'],
       password: json['password'],
     );
   }
 
   Map<String, dynamic> toJson() {
     final Map<String, dynamic> data = new Map<String, dynamic>();
-    data['email'] = this.email;
+    data['username'] = this.username;
     data['password'] = this.password;
     return data;
   }

@@ -100,7 +100,24 @@ class _postConentState extends State<postConent> {
                             width: 20,
                           ),
                         ]),
-                        if (identity == 'admin') ...[
+                        if (identify == 'admin') ...[
+                          SizedBox(
+                            height: 10,
+                          ),
+                         
+                          if (widget.postList[widget.index].sentiment_score! >=
+                              0.5) ...[
+                            Text(
+                              '情感分析分數:${widget.postList[widget.index].sentiment_score}',
+                              style:
+                                  TextStyle(fontSize: 20, color: Colors.green),
+                            ),
+                          ] else ...[
+                            Text(
+                              '情感分析分數:${widget.postList[widget.index].sentiment_score}',
+                              style: TextStyle(fontSize: 20, color: Colors.red),
+                            ),
+                          ],
                           //////如果是管理員///////////ok
                           Row(
                             children: [
@@ -108,13 +125,14 @@ class _postConentState extends State<postConent> {
                                 onPressed: () async {
                                   var response = await http.delete(
                                     Uri.parse(
-                                        '${dotenv.env['POST_API']as String}/${widget.postList[widget.index].id}'),
+                                        '${dotenv.env['POST_API'] as String}/${widget.postList[widget.index].id}'),
                                     headers: {
-                                      'accept': 'application/json'
-                                      // 'Authorization': 'Bearer $token'//////////////////////////////////////////////
+                                      'accept': 'application/json',
+                                      'Authorization':
+                                          'Bearer ${token}'
                                     },
                                   );
-                                  if (response.statusCode == 204) {                                  
+                                  if (response.statusCode == 204) {
                                     showDialog(
                                       context: context,
                                       builder: (context) => AlertDialog(
@@ -159,12 +177,13 @@ class _postConentState extends State<postConent> {
 
                                   var response = await http.patch(
                                     Uri.parse(
-                                        '${dotenv.env['POST_API']as String}/${widget.postList[widget.index].id}'),
+                                        '${dotenv.env['POST_API'] as String}/${widget.postList[widget.index].id}'),
                                     body: json.encode(updatePost.toJson()),
                                     headers: {
                                       'accept': 'application/json',
                                       'Content-Type': 'application/json',
-                                      'Authorization': 'Bearer $token'//////////////////////////////////////////////
+                                      'Authorization':
+                                          'Bearer $token' 
                                     },
                                   );
                                   if (response.statusCode == 200) {
@@ -202,7 +221,9 @@ class _postConentState extends State<postConent> {
                                   ),
                                 ),
                               ),
-                              SizedBox(width: 10,),
+                              SizedBox(
+                                width: 10,
+                              ),
                               Text(
                                 '目前狀態:${widget.postList[widget.index].state}',
                                 style: TextStyle(
